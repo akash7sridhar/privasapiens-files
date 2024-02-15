@@ -19,7 +19,7 @@ spec:
   tolerations:
   - key: "name"
     operator: "Equal"
-    value: "ng1"
+    value: "ng2"
     effect: "NoSchedule"
   nodeSelector:
     name: ng2
