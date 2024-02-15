@@ -13,7 +13,6 @@ module "eks" {
   cluster_version                 = local.cluster_version
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access  = false
-
   cluster_addons = {
     coredns = {
       most_recent = true
@@ -51,6 +50,15 @@ module "eks" {
       type                       = "egress"
       source_node_security_group = true
     }
+
+    ingress_self_all = {
+      description = "Cluster to cluster all ports/protocols"
+      protocol    = "-1"
+      from_port   = 0
+      to_port     = 0
+      type        = "ingress"
+      cidr_blocks = [module.vpc.vpc_cidr_block]
+      }
   }
 
   # Extend node-to-node security group rules
@@ -95,17 +103,12 @@ module "eks" {
         name = "ng1"
       }
 
-      taints = [
-        {
-          key    = "name"
-          value  = "ng1"
-          effect = "NO_SCHEDULE"
-        }
-      ]
-
       update_config = {
         max_unavailable_percentage = 50 # or set `max_unavailable`
       }
+      iam_role_additional_policies = { 
+          AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy" 
+      } 
 
       tags = {
         ExtraTag = "example"
@@ -130,6 +133,9 @@ module "eks" {
         }
       ]
 
+      iam_role_additional_policies = { 
+          AmazonEBSCSIDriverPolicy = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy" 
+      } 
       update_config = {
         max_unavailable_percentage = 50 # or set `max_unavailable`
       }
@@ -139,6 +145,10 @@ module "eks" {
       }
     }
   }
+
+  # Cluster access entry
+  # To add the current caller identity as an administrator
+  enable_cluster_creator_admin_permissions = true
 
   tags = local.tags
 
